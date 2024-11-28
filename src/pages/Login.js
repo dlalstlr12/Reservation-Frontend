@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { loginUser } from "../services/api";
+import axios from "axios";
 
 const Login = () => {
     const [formData, setFormData] = useState({ username: "", password: "" });
@@ -12,10 +12,14 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await loginUser(formData);
-            setMessage(`Welcome, ${response.username}!`);
+            // 로그인 API 호출
+            const response = await axios.post("http://localhost:8080/api/users/login", formData, {
+                withCredentials: true, // 쿠키 전송 허용
+            });
+
+            setMessage(response.data);
         } catch (error) {
-            setMessage("Error: " + error.response?.data?.message || error.message);
+            setMessage("Error: " + (error.response?.data?.message || error.message));
         }
     };
 
