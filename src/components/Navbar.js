@@ -16,7 +16,6 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, setMessage }) => {
                 }
             );
             setIsLoggedIn(false);
-            setMessage("Logged out successfully!");
             navigate("/login");
         } catch (error) {
             setMessage("Error: " + (error.response?.data?.message || error.message));

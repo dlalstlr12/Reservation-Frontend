@@ -10,8 +10,7 @@ import axios from "axios";
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 관리
-    const [message, setMessage] = useState(""); // 메시지 관리
-
+    const [loading, setLoading] = useState(true);
     // 로그인 상태 확인 함수
     const checkAuthStatus = async () => {
         try {
@@ -23,6 +22,8 @@ function App() {
             }
         } catch (error) {
             setIsLoggedIn(false); // 인증 실패 시 로그아웃 상태로 설정
+        } finally {
+            setLoading(false); // 로딩 완료
         }
     };
 
@@ -30,20 +31,25 @@ function App() {
     useEffect(() => {
         checkAuthStatus();
     }, []);
-
+    if (loading) {
+        return <div>Loading...</div>;
+    }
     return (
         <Router>
             <div>
-                {/* Navbar에 로그인 상태 전달 */}
-                <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} setMessage={setMessage} />
+                <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
                 <div style={{ padding: "20px" }}>
-                    {message && <p>{message}</p>}
                     <Routes>
                         {/* 초기 페이지를 로그인 페이지로 설정 */}
-                        <Route path="/" element={<Navigate to="/login" replace />} />
+                        <Route
+                            path="/"
+                            element={isLoggedIn ? <Navigate to="/main" replace /> : <Navigate to="/login" replace />}
+                        />
                         <Route
                             path="/login"
-                            element={<Login setIsLoggedIn={setIsLoggedIn} setMessage={setMessage} />}
+                            element={
+                                isLoggedIn ? <Navigate to="/main" replace /> : <Login setIsLoggedIn={setIsLoggedIn} />
+                            }
                         />
                         <Route path="/register" element={<Register />} />
                         <Route

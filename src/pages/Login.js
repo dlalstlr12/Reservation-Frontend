@@ -19,7 +19,6 @@ const Login = ({ setIsLoggedIn, setMessage }) => {
             });
 
             setIsLoggedIn(true);
-            setMessage(response.data);
             navigate("/main");
         } catch (error) {
             setMessage("Error: " + (error.response?.data?.message || error.message));
