@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../services/api";
 import axios from "axios";
-
-const Login = () => {
+const Login = ({ setIsLoggedIn, setMessage }) => {
     const [formData, setFormData] = useState({ username: "", password: "" });
-    const [message, setMessage] = useState("");
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -17,7 +18,9 @@ const Login = () => {
                 withCredentials: true, // 쿠키 전송 허용
             });
 
+            setIsLoggedIn(true);
             setMessage(response.data);
+            navigate("/main");
         } catch (error) {
             setMessage("Error: " + (error.response?.data?.message || error.message));
         }
@@ -37,7 +40,6 @@ const Login = () => {
                 </div>
                 <button type="submit">Login</button>
             </form>
-            <p>{message}</p>
         </div>
     );
 };
