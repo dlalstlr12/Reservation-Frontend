@@ -9,6 +9,7 @@ import Register from "./pages/Register"; // 회원가입 페이지
 import axios from "axios";
 import Admin from "./pages/Admin";
 import OttListPage from "./pages/OttList";
+import OttList from "./pages/OttList";
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 관리
@@ -83,6 +84,14 @@ function App() {
                             element={
                                 <RequireAuth isLoggedIn={isLoggedIn}>
                                     <OttListPage />
+                                </RequireAuth>
+                            }
+                        />
+                        <Route
+                            path="/ott-list"
+                            element={
+                                <RequireAuth isLoggedIn={isLoggedIn}>
+                                    <OttList />
                                 </RequireAuth>
                             }
                         />

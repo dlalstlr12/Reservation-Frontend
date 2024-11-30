@@ -41,6 +41,9 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, setMessage }) => {
                     <Link to="/profile" style={{ marginRight: "10px" }}>
                         Profile
                     </Link>
+                    <Link to="/ott-list" style={{ marginRight: "10px" }}>
+                        OttList
+                    </Link>
                     <button onClick={handleLogout}>Logout</button>
                 </>
             ) : (

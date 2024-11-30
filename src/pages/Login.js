@@ -13,13 +13,27 @@ const Login = ({ setIsLoggedIn, setMessage }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // 로그인 API 호출
-            const response = await axios.post("http://localhost:8080/api/users/login", formData, {
-                withCredentials: true, // 쿠키 전송 허용
-            });
+            const response = await axios.post(
+                "http://localhost:8080/api/users/login",
+                {
+                    username: formData.username,
+                    password: formData.password,
+                },
+                {
+                    withCredentials: true,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-            setIsLoggedIn(true);
-            navigate("/main");
+            if (response.data) {
+                setIsLoggedIn(true);
+                // userId를 localStorage에도 저장
+                localStorage.setItem("userId", response.data.id);
+                localStorage.setItem("username", response.data.username);
+                navigate("/main");
+            }
         } catch (error) {
             setMessage("Error: " + (error.response?.data?.message || error.message));
         }
