@@ -1,10 +1,10 @@
 import React from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Navbar, Nav, Container } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Navbar = ({ isLoggedIn, setIsLoggedIn, setMessage }) => {
+const NavigationBar = ({ isLoggedIn, setIsLoggedIn }) => {
     const navigate = useNavigate();
-    const location = useLocation(); // 현재 경로 확인
 
     const handleLogout = async () => {
         try {
@@ -15,42 +15,58 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, setMessage }) => {
                     withCredentials: true,
                 }
             );
+
+            // 로컬 스토리지 클리어
+            localStorage.removeItem("userId");
+            localStorage.removeItem("username");
+
+            // 로그인 상태 업데이트
             setIsLoggedIn(false);
-            navigate("/login");
+
+            // 메인 페이지로 이동
+            navigate("/");
         } catch (error) {
-            setMessage("Error: " + (error.response?.data?.message || error.message));
+            console.error("로그아웃 실패:", error);
         }
     };
 
-    // Register 페이지에서만 로그인 버튼만 보이게 처리
-    if (location.pathname === "/register") {
-        return (
-            <nav style={{ padding: "10px", backgroundColor: "#f5f5f5", borderBottom: "1px solid #ddd" }}>
-                <Link to="/login">Login</Link> {/* 로그인 버튼만 표시 */}
-            </nav>
-        );
-    }
-
     return (
-        <nav style={{ padding: "10px", backgroundColor: "#f5f5f5", borderBottom: "1px solid #ddd" }}>
-            {isLoggedIn ? (
-                <>
-                    <Link to="/main" style={{ marginRight: "10px" }}>
-                        Main
-                    </Link>
-                    <Link to="/profile" style={{ marginRight: "10px" }}>
-                        Profile
-                    </Link>
-                    <Link to="/ott-list" style={{ marginRight: "10px" }}>
-                        OttList
-                    </Link>
-                    <button onClick={handleLogout}>Logout</button>
-                </>
-            ) : (
-                <Link to="/register">Register</Link> // 로그인 상태가 아닐 때 회원가입 버튼
-            )}
-        </nav>
+        <Navbar bg="light" expand="lg">
+            <Container>
+                <Navbar.Brand as={Link} to="/">
+                    OTT 서비스
+                </Navbar.Brand>
+                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="me-auto">
+                        <Nav.Link as={Link} to="/main">
+                            홈
+                        </Nav.Link>
+                        <Nav.Link as={Link} to="/ott-list">
+                            OTT 목록
+                        </Nav.Link>
+                    </Nav>
+                    <Nav>
+                        {isLoggedIn ? (
+                            <>
+                                <span className="navbar-text me-3">{localStorage.getItem("username")}님</span>
+                                <Nav.Link onClick={handleLogout}>로그아웃</Nav.Link>
+                            </>
+                        ) : (
+                            <>
+                                <Nav.Link as={Link} to="/login">
+                                    로그인
+                                </Nav.Link>
+                                <Nav.Link as={Link} to="/register">
+                                    회원가입
+                                </Nav.Link>
+                            </>
+                        )}
+                    </Nav>
+                </Navbar.Collapse>
+            </Container>
+        </Navbar>
     );
 };
 
-export default Navbar;
+export default NavigationBar;

@@ -1,36 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { fetchUsers } from "../services/api";
+import React from "react";
+import { Container } from "react-bootstrap";
 
 const Home = () => {
-    const [users, setUsers] = useState([]);
-
-    useEffect(() => {
-        const loadUsers = async () => {
-            try {
-                const data = await fetchUsers();
-                console.log("Fetched Users:", data); // 데이터를 콘솔에 출력
-                setUsers(data);
-            } catch (error) {
-                console.error("Error fetching users:", error);
-            }
-        };
-
-        loadUsers();
-    }, []);
-
     return (
-        <div>
-            <h2>User List</h2>
-            {users.length > 0 ? (
-                <ul>
-                    {users.map((user) => (
-                        <li key={user.id}>{user.username}</li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No users found.</p>
-            )}
-        </div>
+        <Container className="mt-4">
+            <div className="text-center">
+                <h1 className="mb-4">OTT 구독 서비스</h1>
+                <p className="lead">다양한 OTT 서비스를 한 곳에서 편리하게 관리하세요.</p>
+                <hr className="my-4" />
+                <p>Netflix, Disney+, Watcha 등 다양한 OTT 서비스를 구독하고 관리할 수 있습니다.</p>
+            </div>
+        </Container>
     );
 };
 

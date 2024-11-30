@@ -13,25 +13,14 @@ const Login = ({ setIsLoggedIn, setMessage }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(
-                "http://localhost:8080/api/users/login",
-                {
-                    username: formData.username,
-                    password: formData.password,
-                },
-                {
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
+            const response = await axios.post("http://localhost:8080/api/users/login", formData, {
+                withCredentials: true,
+            });
 
             if (response.data) {
-                setIsLoggedIn(true);
-                // userId를 localStorage에도 저장
                 localStorage.setItem("userId", response.data.id);
                 localStorage.setItem("username", response.data.username);
+                setIsLoggedIn(true);
                 navigate("/main");
             }
         } catch (error) {
