@@ -13,12 +13,25 @@ const AdminPage = () => {
     // OTT 목록 가져오기
     const fetchOtts = async () => {
         try {
-            const data = await axios.get("http://localhost:8080/api/admin/ott", {
-                withCredentials: true, // 쿠키 전송 허용
+            const response = await axios.get("http://localhost:8080/api/admin/ott", {
+                withCredentials: true,
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
             });
-            setOtts(data.data);
+
+            // response.data가 이미 배열 형태일 것입니다
+            if (Array.isArray(response.data)) {
+                setOtts(response.data);
+            } else {
+                console.error("예상치 못한 데이터 형식:", response.data);
+                setOtts([]);
+            }
         } catch (error) {
-            setMessage("Failed to fetch OTTs.");
+            console.error("OTT 목록 가져오기 실패:", error);
+            setMessage("OTT 목록을 가져오는데 실패했습니다.");
+            setOtts([]);
         }
     };
     useEffect(() => {
@@ -39,11 +52,22 @@ const AdminPage = () => {
     // 가격제 추가
     const handleCreatePlan = async () => {
         try {
-            await createPricingPlan(selectedOttId, planData);
-            setMessage("Pricing plan added successfully!");
+            const response = await axios.post(
+                `http://localhost:8080/api/admin/ott/${selectedOttId}/pricing-plan`,
+                {
+                    planName: planData.planName,
+                    price: parseInt(planData.price),
+                },
+                {
+                    withCredentials: true,
+                }
+            );
+            console.log("가격제 추가 응답:", response.data);
+            setMessage("가격제가 성공적으로 추가되었습니다!");
             fetchOtts(); // 목록 갱신
         } catch (error) {
-            setMessage("Failed to add pricing plan.");
+            console.error("가격제 추가 실패:", error);
+            setMessage("가격제 추가에 실패했습니다.");
         }
     };
 
@@ -71,11 +95,12 @@ const AdminPage = () => {
                 <h3>Add Pricing Plan</h3>
                 <select value={selectedOttId} onChange={(e) => setSelectedOttId(e.target.value)}>
                     <option value="">Select OTT</option>
-                    {otts.map((ott) => (
-                        <option key={ott.id} value={ott.id}>
-                            {ott.name}
-                        </option>
-                    ))}
+                    {otts &&
+                        otts.map((ott) => (
+                            <option key={ott.id} value={ott.id}>
+                                {ott.name}
+                            </option>
+                        ))}
                 </select>
                 <input
                     type="text"
@@ -91,16 +116,57 @@ const AdminPage = () => {
                 />
                 <button onClick={handleCreatePlan}>Add Plan</button>
             </div>
+
+            {/* OTT 목록 표시 */}
             <div>
-                <h3>ott 목록</h3>
-                <p>
-                    {otts.map((ott) => (
-                        <option key={ott.id} value={ott.id}>
-                            {ott.name}
-                        </option>
-                    ))}
-                </p>
+                <h3>OTT 목록</h3>
+                {otts && otts.length > 0 ? (
+                    <div>
+                        {otts.map((ott) => (
+                            <div
+                                key={ott.id}
+                                style={{
+                                    border: "1px solid #ddd",
+                                    margin: "10px 0",
+                                    padding: "10px",
+                                    borderRadius: "5px",
+                                }}
+                            >
+                                <h4>{ott.name}</h4>
+                                <p>{ott.description}</p>
+                                {ott.pricingPlans && ott.pricingPlans.length > 0 && (
+                                    <div>
+                                        <h5>가격제:</h5>
+                                        <ul>
+                                            {ott.pricingPlans.map((plan) => (
+                                                <li key={plan.id}>
+                                                    {plan.planName}: {plan.price}원
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p>등록된 OTT가 없습니다.</p>
+                )}
             </div>
+
+            {/* 메시지 표시 */}
+            {message && (
+                <div
+                    style={{
+                        margin: "20px 0",
+                        padding: "10px",
+                        backgroundColor: "#f0f0f0",
+                        borderRadius: "5px",
+                    }}
+                >
+                    {message}
+                </div>
+            )}
         </div>
     );
 };
