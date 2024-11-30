@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/api";
+
 import axios from "axios";
 const Login = ({ setIsLoggedIn, setMessage }) => {
     const [formData, setFormData] = useState({ username: "", password: "" });
