@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createOtt, createPricingPlan, getAllOtts } from "../services/adminApi";
 import axios from "axios";
+import { Container, Row, Col, Form, Button, Card, Alert } from "react-bootstrap";
 
 const AdminPage = () => {
     const [ottName, setOttName] = useState("");
@@ -17,7 +18,7 @@ const AdminPage = () => {
                 withCredentials: true,
                 headers: {
                     Accept: "application/json",
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json;charset=UTF-8",
                 },
             });
 
@@ -72,102 +73,139 @@ const AdminPage = () => {
     };
 
     return (
-        <div>
-            <h2>Admin Page</h2>
-            <div>
-                <h3>Create OTT</h3>
-                <input
-                    type="text"
-                    placeholder="OTT Name"
-                    value={ottName}
-                    onChange={(e) => setOttName(e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
-                <button onClick={handleCreateOtt}>Create OTT</button>
-            </div>
+        <Container className="py-5">
+            <h2 className="text-center mb-4">관리자 페이지</h2>
 
-            <div>
-                <h3>Add Pricing Plan</h3>
-                <select value={selectedOttId} onChange={(e) => setSelectedOttId(e.target.value)}>
-                    <option value="">Select OTT</option>
-                    {otts &&
-                        otts.map((ott) => (
-                            <option key={ott.id} value={ott.id}>
-                                {ott.name}
-                            </option>
-                        ))}
-                </select>
-                <input
-                    type="text"
-                    placeholder="Plan Name"
-                    value={planData.planName}
-                    onChange={(e) => setPlanData({ ...planData, planName: e.target.value })}
-                />
-                <input
-                    type="number"
-                    placeholder="Price"
-                    value={planData.price}
-                    onChange={(e) => setPlanData({ ...planData, price: e.target.value })}
-                />
-                <button onClick={handleCreatePlan}>Add Plan</button>
-            </div>
+            {/* OTT 생성 폼 */}
+            <Card className="mb-4">
+                <Card.Header as="h3">OTT 서비스 생성</Card.Header>
+                <Card.Body>
+                    <Form>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>OTT 이름</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="OTT 이름을 입력하세요"
+                                        value={ottName}
+                                        onChange={(e) => setOttName(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>설명</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="설명을 입력하세요"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        <Button variant="primary" onClick={handleCreateOtt}>
+                            OTT 생성
+                        </Button>
+                    </Form>
+                </Card.Body>
+            </Card>
 
-            {/* OTT 목록 표시 */}
-            <div>
-                <h3>OTT 목록</h3>
-                {otts && otts.length > 0 ? (
-                    <div>
-                        {otts.map((ott) => (
-                            <div
-                                key={ott.id}
-                                style={{
-                                    border: "1px solid #ddd",
-                                    margin: "10px 0",
-                                    padding: "10px",
-                                    borderRadius: "5px",
-                                }}
-                            >
-                                <h4>{ott.name}</h4>
-                                <p>{ott.description}</p>
-                                {ott.pricingPlans && ott.pricingPlans.length > 0 && (
-                                    <div>
-                                        <h5>가격제:</h5>
-                                        <ul>
-                                            {ott.pricingPlans.map((plan) => (
-                                                <li key={plan.id}>
-                                                    {plan.planName}: {plan.price}원
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p>등록된 OTT가 없습니다.</p>
-                )}
-            </div>
+            {/* 가격제 추가 폼 */}
+            <Card className="mb-4">
+                <Card.Header as="h3">가격제 추가</Card.Header>
+                <Card.Body>
+                    <Form>
+                        <Row>
+                            <Col md={4}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>OTT 선택</Form.Label>
+                                    <Form.Select
+                                        value={selectedOttId}
+                                        onChange={(e) => setSelectedOttId(e.target.value)}
+                                    >
+                                        <option value="">OTT를 선택하세요</option>
+                                        {otts.map((ott) => (
+                                            <option key={ott.id} value={ott.id}>
+                                                {ott.name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>요금제 이름</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="요금제 이름"
+                                        value={planData.planName}
+                                        onChange={(e) => setPlanData({ ...planData, planName: e.target.value })}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>가격</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        placeholder="가격"
+                                        value={planData.price}
+                                        onChange={(e) => setPlanData({ ...planData, price: e.target.value })}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        <Button variant="primary" onClick={handleCreatePlan}>
+                            가격제 추가
+                        </Button>
+                    </Form>
+                </Card.Body>
+            </Card>
+
+            {/* OTT 목록 */}
+            <Card>
+                <Card.Header as="h3">OTT 서비스 목록</Card.Header>
+                <Card.Body>
+                    {otts && otts.length > 0 ? (
+                        <Row>
+                            {otts.map((ott) => (
+                                <Col md={6} lg={4} key={ott.id} className="mb-4">
+                                    <Card>
+                                        <Card.Body>
+                                            <Card.Title>{ott.name}</Card.Title>
+                                            <Card.Text>{ott.description}</Card.Text>
+                                            {ott.pricingPlans && ott.pricingPlans.length > 0 && (
+                                                <div>
+                                                    <h6 className="mt-3">가격제:</h6>
+                                                    <ul className="list-unstyled">
+                                                        {ott.pricingPlans.map((plan) => (
+                                                            <li key={plan.id} className="mb-2">
+                                                                {plan.planName}: {plan.price.toLocaleString()}원
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
+                    ) : (
+                        <Alert variant="info">등록된 OTT가 없습니다.</Alert>
+                    )}
+                </Card.Body>
+            </Card>
 
             {/* 메시지 표시 */}
             {message && (
-                <div
-                    style={{
-                        margin: "20px 0",
-                        padding: "10px",
-                        backgroundColor: "#f0f0f0",
-                        borderRadius: "5px",
-                    }}
-                >
+                <Alert variant="info" className="mt-3" onClose={() => setMessage("")} dismissible>
                     {message}
-                </div>
+                </Alert>
             )}
-        </div>
+        </Container>
     );
 };
 
