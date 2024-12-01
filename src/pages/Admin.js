@@ -32,19 +32,38 @@ const Admin = () => {
     const handleSubmitOtt = async (e) => {
         e.preventDefault();
         try {
-            if (isEditing) {
-                await axios.put(`http://localhost:8080/api/admin/ott/${selectedOtt.id}`, ottForm, {
-                    withCredentials: true,
-                });
-                setMessage("OTT 서비스가 수정되었습니다.");
+            if (isEditing && selectedOtt) {
+                await axios.put(
+                    `http://localhost:8080/api/admin/ott/${selectedOtt.id}`,
+                    {
+                        name: ottForm.name,
+                        description: ottForm.description,
+                    },
+                    { withCredentials: true }
+                );
+                setMessage("OTT 서비스가 성공적으로 수정되었습니다.");
             } else {
-                await axios.post("http://localhost:8080/api/admin/ott", ottForm, { withCredentials: true });
-                setMessage("OTT 서비스가 추가되었습니다.");
+                await axios.post(
+                    "http://localhost:8080/api/admin/ott",
+                    {
+                        name: ottForm.name,
+                        description: ottForm.description,
+                    },
+                    { withCredentials: true }
+                );
+                setMessage("새로운 OTT 서비스가 추가되었습니다.");
             }
+
+            // 모달 닫고 폼 초기화
             setShowOttModal(false);
+            setOttForm({ name: "", description: "" });
+            setIsEditing(false);
+            setSelectedOtt(null);
+
+            // 목록 새로고침
             fetchOtts();
         } catch (error) {
-            setMessage("작업 실패: " + error.message);
+            setMessage(error.response?.data?.message || "OTT 서비스 처리 중 오류가 발생했습니다.");
         }
     };
 
@@ -85,7 +104,15 @@ const Admin = () => {
             setMessage("요금제 삭제 실패: " + error.message);
         }
     };
-
+    const handleEditOtt = (ott) => {
+        setIsEditing(true);
+        setSelectedOtt(ott);
+        setOttForm({
+            name: ott.name,
+            description: ott.description,
+        });
+        setShowOttModal(true);
+    };
     return (
         <div className="admin-container">
             <Container className="py-5">
@@ -175,15 +202,7 @@ const Admin = () => {
                                         >
                                             <FaPlus className="me-2" /> 요금제 추가
                                         </Button>
-                                        <Button
-                                            className="action-btn edit-btn"
-                                            onClick={() => {
-                                                setIsEditing(true);
-                                                setOttForm({ name: ott.name, description: ott.description });
-                                                setSelectedOtt(ott);
-                                                setShowOttModal(true);
-                                            }}
-                                        >
+                                        <Button className="action-btn edit-btn" onClick={() => handleEditOtt(ott)}>
                                             <FaEdit className="me-2" /> 수정
                                         </Button>
                                         <Button
@@ -204,7 +223,17 @@ const Admin = () => {
                 </Row>
 
                 {/* OTT Modal */}
-                <Modal show={showOttModal} onHide={() => setShowOttModal(false)} centered className="admin-modal">
+                <Modal
+                    show={showOttModal}
+                    onHide={() => {
+                        setShowOttModal(false);
+                        setOttForm({ name: "", description: "" });
+                        setIsEditing(false);
+                        setSelectedOtt(null);
+                    }}
+                    centered
+                    className="admin-modal"
+                >
                     <Modal.Header closeButton>
                         <Modal.Title>
                             <FaStream className="me-2" />
@@ -221,6 +250,7 @@ const Admin = () => {
                                     value={ottForm.name}
                                     onChange={(e) => setOttForm({ ...ottForm, name: e.target.value })}
                                     required
+                                    placeholder="OTT 서비스 이름을 입력하세요"
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">
@@ -232,10 +262,14 @@ const Admin = () => {
                                     value={ottForm.description}
                                     onChange={(e) => setOttForm({ ...ottForm, description: e.target.value })}
                                     required
+                                    placeholder="OTT 서비스에 대한 설명을 입력하세요"
                                 />
                             </Form.Group>
                             <div className="d-grid gap-2">
-                                <Button type="submit" className="submit-btn">
+                                <Button
+                                    type="submit"
+                                    className={`submit-btn ${isEditing ? "btn-success" : "btn-primary"}`}
+                                >
                                     {isEditing ? "수정하기" : "추가하기"}
                                 </Button>
                             </div>
