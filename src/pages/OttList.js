@@ -6,6 +6,7 @@ const OttList = () => {
     const [otts, setOtts] = useState([]);
     const [message, setMessage] = useState("");
     const [selectedOtt, setSelectedOtt] = useState(null);
+    const [selectedPlan, setSelectedPlan] = useState(null);
     const [subscriptionPeriod, setSubscriptionPeriod] = useState(1); // 기본 1개월
     const [showSubscribeModal, setShowSubscribeModal] = useState(false);
     const navigate = useNavigate();
@@ -31,49 +32,37 @@ const OttList = () => {
         setShowSubscribeModal(true);
     };
     const handleConfirmSubscription = async () => {
+        if (!selectedPlan) {
+            setMessage("요금제를 선택해주세요.");
+            return;
+        }
+
         try {
             const subscriptionData = {
                 ottId: selectedOtt.id,
-                pricingPlanId: selectedOtt.pricingPlans[0].id,
+                pricingPlanId: selectedPlan.id,
                 period: subscriptionPeriod,
             };
-
-            // 요청 데이터 로깅
-            console.log("구독 요청 데이터:", subscriptionData);
 
             const response = await axios.post("http://localhost:8080/api/subscriptions", subscriptionData, {
                 withCredentials: true,
                 headers: {
                     "Content-Type": "application/json",
-                    Accept: "application/json",
                 },
             });
 
-            console.log("구독 응답:", response.data);
             setMessage("구독이 완료되었습니다!");
             setShowSubscribeModal(false);
+            setSelectedPlan(null);
+            setSubscriptionPeriod(1);
         } catch (error) {
-            console.error("구독 신청 실패 상세:", {
-                status: error.response?.status,
-                data: error.response?.data,
-                error: error.message,
-            });
-
-            let errorMessage = "구독 신청에 실패했습니다.";
-
-            if (error.response) {
-                if (error.response.status === 401) {
-                    errorMessage = "로그인이 필요한 서비스입니다.";
-                    navigate("/login");
-                } else if (error.response.status === 400) {
-                    errorMessage = error.response.data?.message || "잘못된 요청입니다.";
-                } else if (error.response.status === 403) {
-                    errorMessage = "접근 권한이 없습니다.";
-                    navigate("/login");
-                }
+            console.error("구독 신청 실패:", error);
+            if (error.response?.status === 401) {
+                setMessage("로그인이 필요한 서비스입니다.");
+                navigate("/login");
+            } else {
+                setMessage(error.response?.data?.message || "구독 신청에 실패했습니다.");
             }
-
-            setMessage(errorMessage);
         }
     };
 
@@ -125,6 +114,29 @@ const OttList = () => {
                                 </button>
                             </div>
                             <div className="modal-body">
+                                {/* 요금제 선택 */}
+                                <div className="form-group mb-3">
+                                    <label>요금제 선택</label>
+                                    <div>
+                                        {selectedOtt.pricingPlans.map((plan) => (
+                                            <div key={plan.id} className="form-check">
+                                                <input
+                                                    type="radio"
+                                                    className="form-check-input"
+                                                    name="pricingPlan"
+                                                    id={`plan-${plan.id}`}
+                                                    checked={selectedPlan?.id === plan.id}
+                                                    onChange={() => setSelectedPlan(plan)}
+                                                />
+                                                <label className="form-check-label" htmlFor={`plan-${plan.id}`}>
+                                                    {plan.planName}: {plan.price.toLocaleString()}원
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 구독 기간 선택 */}
                                 <div className="form-group">
                                     <label>구독 기간 (월)</label>
                                     <select
@@ -138,9 +150,13 @@ const OttList = () => {
                                         <option value={12}>12개월</option>
                                     </select>
                                 </div>
-                                <p className="mt-3">
-                                    총 결제 금액: {selectedOtt.pricingPlans[0].price * subscriptionPeriod}원
-                                </p>
+
+                                {/* 총 결제 금액 표시 */}
+                                {selectedPlan && (
+                                    <p className="mt-3">
+                                        총 결제 금액: {(selectedPlan.price * subscriptionPeriod).toLocaleString()}원
+                                    </p>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button
@@ -150,7 +166,12 @@ const OttList = () => {
                                 >
                                     취소
                                 </button>
-                                <button type="button" className="btn btn-primary" onClick={handleConfirmSubscription}>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={handleConfirmSubscription}
+                                    disabled={!selectedPlan}
+                                >
                                     구독하기
                                 </button>
                             </div>
