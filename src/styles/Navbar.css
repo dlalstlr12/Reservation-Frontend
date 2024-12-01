@@ -1,0 +1,85 @@
+.custom-navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 0.8rem 0;
+}
+
+.brand-text {
+    font-weight: 700;
+    color: #1e88e5 !important;
+    font-size: 1.3rem;
+}
+
+.nav-link-custom {
+    color: #2c3e50 !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    margin: 0 0.2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link-custom:hover {
+    background: rgba(100, 181, 246, 0.1);
+    color: #1e88e5 !important;
+    transform: translateY(-1px);
+}
+
+.nav-icon {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.navbar-text {
+    color: #2c3e50;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.logout-btn {
+    color: #e74c3c !important;
+}
+
+.logout-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #c0392b !important;
+}
+
+.register-btn {
+    background: #64b5f6;
+    color: white !important;
+    margin-left: 0.5rem;
+}
+
+.register-btn:hover {
+    background: #42a5f5;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
+}
+
+@media (max-width: 991px) {
+    .nav-link-custom {
+        padding: 0.8rem 1rem !important;
+        margin: 0.2rem 0;
+    }
+
+    .register-btn {
+        margin: 0.2rem 0;
+        margin-left: 0;
+    }
+
+    .navbar-text {
+        padding: 0.8rem 1rem;
+    }
+}
+
+/* 스크롤 시 Navbar 스타일 */
+.custom-navbar.scrolled {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}

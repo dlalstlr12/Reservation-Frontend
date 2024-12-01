@@ -1,272 +1,288 @@
 import React, { useState, useEffect } from "react";
-import { createOtt, createPricingPlan, getAllOtts } from "../services/adminApi";
+import { Container, Row, Col, Card, Button, Form, Alert, Modal, Table } from "react-bootstrap";
+import { FaPlus, FaEdit, FaTrash, FaStream, FaCrown, FaWonSign } from "react-icons/fa";
 import axios from "axios";
-import { Container, Row, Col, Form, Button, Card, Alert } from "react-bootstrap";
+import "../styles/Admin.css";
 
-const AdminPage = () => {
-    const [ottName, setOttName] = useState("");
-    const [description, setDescription] = useState("");
-    const [planData, setPlanData] = useState({ planName: "", price: "" });
-    const [selectedOttId, setSelectedOttId] = useState("");
+const Admin = () => {
     const [otts, setOtts] = useState([]);
     const [message, setMessage] = useState("");
+    const [showOttModal, setShowOttModal] = useState(false);
+    const [showPlanModal, setShowPlanModal] = useState(false);
+    const [selectedOtt, setSelectedOtt] = useState(null);
+    const [ottForm, setOttForm] = useState({ name: "", description: "" });
+    const [planForm, setPlanForm] = useState({ planName: "", price: "" });
+    const [isEditing, setIsEditing] = useState(false);
 
-    // OTT 목록 가져오기
-    const fetchOtts = async () => {
-        try {
-            const response = await axios.get("http://localhost:8080/api/admin/ott", {
-                withCredentials: true,
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json;charset=UTF-8",
-                },
-            });
-
-            // response.data가 이미 배열 형태일 것입니다
-            if (Array.isArray(response.data)) {
-                setOtts(response.data);
-            } else {
-                console.error("예상치 못한 데이터 형식:", response.data);
-                setOtts([]);
-            }
-        } catch (error) {
-            console.error("OTT 목록 가져오기 실패:", error);
-            setMessage("OTT 목록을 가져오는데 실패했습니다.");
-            setOtts([]);
-        }
-    };
     useEffect(() => {
         fetchOtts();
     }, []);
 
-    // OTT 생성
-    const handleCreateOtt = async () => {
+    const fetchOtts = async () => {
         try {
-            await createOtt({ name: ottName, description });
-            setMessage("OTT created successfully!");
-            fetchOtts(); // 목록 갱신
+            const response = await axios.get("http://localhost:8080/api/admin/ott", {
+                withCredentials: true,
+            });
+            setOtts(response.data);
         } catch (error) {
-            setMessage("Failed to create OTT.");
+            setMessage("OTT 목록을 가져오는데 실패했습니다.");
         }
     };
 
-    // 가격제 추가
-    const handleCreatePlan = async () => {
+    const handleSubmitOtt = async (e) => {
+        e.preventDefault();
         try {
-            const response = await axios.post(
-                `http://localhost:8080/api/admin/ott/${selectedOttId}/pricing-plan`,
-                {
-                    planName: planData.planName,
-                    price: parseInt(planData.price),
-                },
-                {
+            if (isEditing) {
+                await axios.put(`http://localhost:8080/api/admin/ott/${selectedOtt.id}`, ottForm, {
                     withCredentials: true,
-                }
-            );
-            console.log("가격제 추가 응답:", response.data);
-            setMessage("가격제가 성공적으로 추가되었습니다!");
-            fetchOtts(); // 목록 갱신
+                });
+                setMessage("OTT 서비스가 수정되었습니다.");
+            } else {
+                await axios.post("http://localhost:8080/api/admin/ott", ottForm, { withCredentials: true });
+                setMessage("OTT 서비스가 추가되었습니다.");
+            }
+            setShowOttModal(false);
+            fetchOtts();
         } catch (error) {
-            console.error("가격제 추가 실패:", error);
-            setMessage("가격제 추가에 실패했습니다.");
+            setMessage("작업 실패: " + error.message);
         }
     };
-    // OTT 삭제 핸들러
+
+    const handleSubmitPlan = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post(`http://localhost:8080/api/admin/ott/${selectedOtt.id}/pricing-plans`, planForm, {
+                withCredentials: true,
+            });
+            setMessage("요금제가 추가되었습니다.");
+            setShowPlanModal(false);
+            fetchOtts();
+        } catch (error) {
+            setMessage("요금제 추가 실패: " + error.message);
+        }
+    };
+
     const handleDeleteOtt = async (ottId) => {
-        if (window.confirm("정말로 이 OTT 서비스를 삭제하시겠습니까?")) {
-            try {
-                await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}`, {
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                setMessage("OTT 서비스가 성공적으로 삭제되었습니다.");
-                fetchOtts(); // OTT 목록 새로고침
-            } catch (error) {
-                console.error("OTT 삭제 실패:", error);
-                setMessage("OTT 삭제에 실패했습니다.");
-            }
+        try {
+            await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}`, {
+                withCredentials: true,
+            });
+            setMessage("OTT 서비스가 삭제되었습니다.");
+            fetchOtts();
+        } catch (error) {
+            setMessage("삭제 실패: " + error.message);
         }
     };
 
-    // 요금제 삭제 핸들러
     const handleDeletePlan = async (ottId, planId) => {
-        if (window.confirm("정말로 이 요금제를 삭제하시겠습니까?")) {
-            try {
-                await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}/pricing-plan/${planId}`, {
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                setMessage("요금제가 성공적으로 삭제되었습니다.");
-                fetchOtts(); // OTT 목록 새로고침
-            } catch (error) {
-                console.error("요금제 삭제 실패:", error);
-                setMessage("요금제 삭제에 실패했습니다.");
-            }
+        try {
+            await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}/pricing-plans/${planId}`, {
+                withCredentials: true,
+            });
+            setMessage("요금제가 삭제되었습니다.");
+            fetchOtts();
+        } catch (error) {
+            setMessage("요금제 삭제 실패: " + error.message);
         }
     };
 
     return (
-        <Container className="py-5">
-            <h2 className="text-center mb-4">관리자 페이지</h2>
+        <div className="admin-container">
+            <Container className="py-5">
+                <div className="admin-header">
+                    <h2 className="admin-title">OTT 서비스 관리</h2>
+                    <Button
+                        className="add-ott-btn"
+                        onClick={() => {
+                            setIsEditing(false);
+                            setOttForm({ name: "", description: "" });
+                            setShowOttModal(true);
+                        }}
+                    >
+                        <FaPlus className="me-2" /> 새 OTT 서비스 추가
+                    </Button>
+                </div>
 
-            {/* OTT 생성 폼 */}
-            <Card className="mb-4">
-                <Card.Header as="h3">OTT 서비스 생성</Card.Header>
-                <Card.Body>
-                    <Form>
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>OTT 이름</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="OTT 이름을 입력하세요"
-                                        value={ottName}
-                                        onChange={(e) => setOttName(e.target.value)}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>설명</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="설명을 입력하세요"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Button variant="primary" onClick={handleCreateOtt}>
-                            OTT 생성
-                        </Button>
-                    </Form>
-                </Card.Body>
-            </Card>
+                {message && (
+                    <Alert
+                        variant={message.includes("실패") ? "danger" : "success"}
+                        onClose={() => setMessage("")}
+                        dismissible
+                        className="mb-4"
+                    >
+                        {message}
+                    </Alert>
+                )}
 
-            {/* 가격제 추가 폼 */}
-            <Card className="mb-4">
-                <Card.Header as="h3">가격제 추가</Card.Header>
-                <Card.Body>
-                    <Form>
-                        <Row>
-                            <Col md={4}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>OTT 선택</Form.Label>
-                                    <Form.Select
-                                        value={selectedOttId}
-                                        onChange={(e) => setSelectedOttId(e.target.value)}
-                                    >
-                                        <option value="">OTT를 선택하세요</option>
-                                        {otts.map((ott) => (
-                                            <option key={ott.id} value={ott.id}>
-                                                {ott.name}
-                                            </option>
-                                        ))}
-                                    </Form.Select>
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>요금제 이름</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="요금제 이름"
-                                        value={planData.planName}
-                                        onChange={(e) => setPlanData({ ...planData, planName: e.target.value })}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>가격</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="가격"
-                                        value={planData.price}
-                                        onChange={(e) => setPlanData({ ...planData, price: e.target.value })}
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Button variant="primary" onClick={handleCreatePlan}>
-                            가격제 추가
-                        </Button>
-                    </Form>
-                </Card.Body>
-            </Card>
+                <Row className="g-4">
+                    {otts.map((ott) => (
+                        <Col key={ott.id} md={6} lg={4}>
+                            <Card className="admin-card">
+                                <Card.Body>
+                                    <div className="ott-icon mb-3">
+                                        <FaStream />
+                                    </div>
+                                    <h3 className="ott-name">{ott.name}</h3>
+                                    <p className="ott-description">{ott.description}</p>
 
-            {/* OTT 목록 */}
-            <Card>
-                <Card.Header as="h3">OTT 서비스 목록</Card.Header>
-                <Card.Body>
-                    {otts && otts.length > 0 ? (
-                        <Row>
-                            {otts.map((ott) => (
-                                <Col md={6} lg={4} key={ott.id} className="mb-4">
-                                    <Card>
-                                        <Card.Body>
-                                            <div className="d-flex justify-content-between align-items-start">
-                                                <Card.Title>{ott.name}</Card.Title>
-                                                <Button
-                                                    variant="danger"
-                                                    size="sm"
-                                                    onClick={() => handleDeleteOtt(ott.id)}
-                                                >
-                                                    삭제
-                                                </Button>
-                                            </div>
-                                            <Card.Text>{ott.description}</Card.Text>
-                                            {ott.pricingPlans && ott.pricingPlans.length > 0 && (
-                                                <div>
-                                                    <h6 className="mt-3">가격제:</h6>
-                                                    <ul className="list-unstyled">
-                                                        {ott.pricingPlans.map((plan) => (
-                                                            <li
-                                                                key={plan.id}
-                                                                className="mb-2 d-flex justify-content-between align-items-center"
-                                                            >
-                                                                <span>
-                                                                    {plan.planName}: {plan.price.toLocaleString()}원
-                                                                </span>
+                                    <div className="plans-section">
+                                        <h5 className="plans-title">
+                                            <FaCrown className="me-2" />
+                                            요금제 목록
+                                        </h5>
+                                        <div className="plans-table-container">
+                                            <Table hover size="sm" className="plans-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>요금제명</th>
+                                                        <th>가격</th>
+                                                        <th>관리</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {ott.pricingPlans.map((plan) => (
+                                                        <tr key={plan.id}>
+                                                            <td>{plan.planName}</td>
+                                                            <td>
+                                                                <FaWonSign className="me-1" />
+                                                                {plan.price.toLocaleString()}
+                                                            </td>
+                                                            <td>
                                                                 <Button
-                                                                    variant="outline-danger"
+                                                                    variant="danger"
                                                                     size="sm"
+                                                                    className="delete-plan-btn"
                                                                     onClick={() => handleDeletePlan(ott.id, plan.id)}
                                                                 >
-                                                                    삭제
+                                                                    <FaTrash />
                                                                 </Button>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Row>
-                    ) : (
-                        <Alert variant="info">등록된 OTT가 없습니다.</Alert>
-                    )}
-                </Card.Body>
-            </Card>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </Table>
+                                        </div>
+                                    </div>
 
-            {/* 메시지 표시 */}
-            {message && (
-                <Alert variant="info" className="mt-3" onClose={() => setMessage("")} dismissible>
-                    {message}
-                </Alert>
-            )}
-        </Container>
+                                    <div className="admin-actions">
+                                        <Button
+                                            className="action-btn add-plan-btn"
+                                            onClick={() => {
+                                                setSelectedOtt(ott);
+                                                setPlanForm({ planName: "", price: "" });
+                                                setShowPlanModal(true);
+                                            }}
+                                        >
+                                            <FaPlus className="me-2" /> 요금제 추가
+                                        </Button>
+                                        <Button
+                                            className="action-btn edit-btn"
+                                            onClick={() => {
+                                                setIsEditing(true);
+                                                setOttForm({ name: ott.name, description: ott.description });
+                                                setSelectedOtt(ott);
+                                                setShowOttModal(true);
+                                            }}
+                                        >
+                                            <FaEdit className="me-2" /> 수정
+                                        </Button>
+                                        <Button
+                                            className="action-btn delete-btn"
+                                            onClick={() => {
+                                                if (window.confirm("정말로 삭제하시겠습니까?")) {
+                                                    handleDeleteOtt(ott.id);
+                                                }
+                                            }}
+                                        >
+                                            <FaTrash className="me-2" /> 삭제
+                                        </Button>
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    ))}
+                </Row>
+
+                {/* OTT Modal */}
+                <Modal show={showOttModal} onHide={() => setShowOttModal(false)} centered className="admin-modal">
+                    <Modal.Header closeButton>
+                        <Modal.Title>
+                            <FaStream className="me-2" />
+                            {isEditing ? "OTT 서비스 수정" : "새 OTT 서비스 추가"}
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form onSubmit={handleSubmitOtt}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>서비스명</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="name"
+                                    value={ottForm.name}
+                                    onChange={(e) => setOttForm({ ...ottForm, name: e.target.value })}
+                                    required
+                                />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>설명</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    name="description"
+                                    value={ottForm.description}
+                                    onChange={(e) => setOttForm({ ...ottForm, description: e.target.value })}
+                                    required
+                                />
+                            </Form.Group>
+                            <div className="d-grid gap-2">
+                                <Button type="submit" className="submit-btn">
+                                    {isEditing ? "수정하기" : "추가하기"}
+                                </Button>
+                            </div>
+                        </Form>
+                    </Modal.Body>
+                </Modal>
+
+                {/* Plan Modal */}
+                <Modal show={showPlanModal} onHide={() => setShowPlanModal(false)} centered className="admin-modal">
+                    <Modal.Header closeButton>
+                        <Modal.Title>
+                            <FaCrown className="me-2" />새 요금제 추가
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form onSubmit={handleSubmitPlan}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>요금제명</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="planName"
+                                    value={planForm.planName}
+                                    onChange={(e) => setPlanForm({ ...planForm, planName: e.target.value })}
+                                    required
+                                />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>가격</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    name="price"
+                                    value={planForm.price}
+                                    onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
+                                    required
+                                />
+                            </Form.Group>
+                            <div className="d-grid gap-2">
+                                <Button type="submit" className="submit-btn">
+                                    추가하기
+                                </Button>
+                            </div>
+                        </Form>
+                    </Modal.Body>
+                </Modal>
+            </Container>
+        </div>
     );
 };
 
-export default AdminPage;
+export default Admin;

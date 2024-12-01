@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Button, Alert } from "react-bootstrap";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "../styles/Main.css";
 
 const Main = () => {
     const [subscriptions, setSubscriptions] = useState([]);
@@ -12,7 +14,6 @@ const Main = () => {
         fetchActiveSubscriptions();
     }, []);
 
-    // 총 구독 금액 계산
     useEffect(() => {
         const total = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
         setTotalAmount(total);
@@ -42,9 +43,7 @@ const Main = () => {
                 {},
                 { withCredentials: true }
             );
-
             setMessage("구독이 성공적으로 취소되었습니다.");
-            // 구독 목록 새로고침
             fetchActiveSubscriptions();
         } catch (error) {
             console.error("구독 취소 실패:", error);
@@ -53,59 +52,72 @@ const Main = () => {
     };
 
     return (
-        <div className="container mt-4">
-            <h2>내 구독 서비스</h2>
+        <div className="main-container">
+            <Container className="py-5">
+                <h2 className="text-center mb-4">내 구독 서비스</h2>
 
-            {/* 총 구독 금액 표시 */}
-            <div className="alert alert-info mb-4">
-                <h4>총 구독 금액: {totalAmount.toLocaleString()}원 / 월</h4>
-            </div>
+                <Card className="total-amount-card mb-4">
+                    <Card.Body>
+                        <h4 className="text-center mb-0">총 구독 금액: {totalAmount.toLocaleString()}원 / 월</h4>
+                    </Card.Body>
+                </Card>
 
-            {message && (
-                <div className="alert alert-info" role="alert">
-                    {message}
-                </div>
-            )}
+                {message && (
+                    <Alert
+                        variant={message.includes("실패") ? "danger" : "success"}
+                        onClose={() => setMessage("")}
+                        dismissible
+                        className="mb-4"
+                    >
+                        {message}
+                    </Alert>
+                )}
 
-            {subscriptions.length === 0 ? (
-                <p>현재 구독 중인 서비스가 없습니다.</p>
-            ) : (
-                <div className="row">
-                    {subscriptions.map((subscription) => (
-                        <div key={subscription.id} className="col-md-4 mb-4">
-                            <div className="card">
-                                <div className="card-body">
-                                    <h5 className="card-title">{subscription.ottName}</h5>
-                                    <p className="card-text">
-                                        요금제: {subscription.planName}
-                                        <br />
-                                        가격: {subscription.price.toLocaleString()}원<br />
-                                        구독 기간: {subscription.duration}개월
-                                        <br />
-                                        구독 시작: {new Date(subscription.startDate).toLocaleDateString()}
-                                        <br />
-                                        구독 만료: {new Date(subscription.endDate).toLocaleDateString()}
-                                        <br />
-                                        상태: {subscription.active ? "구독중" : "만료됨"}
-                                    </p>
-                                    {subscription.active && (
-                                        <button
-                                            className="btn btn-danger"
-                                            onClick={() => {
-                                                if (window.confirm("정말로 구독을 취소하시겠습니까?")) {
-                                                    handleCancelSubscription(subscription.id);
-                                                }
-                                            }}
-                                        >
-                                            구독 취소
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                {subscriptions.length === 0 ? (
+                    <Card className="empty-state-card text-center p-5">
+                        <Card.Body>
+                            <p className="mb-4">현재 구독 중인 서비스가 없습니다.</p>
+                            <Button variant="primary" onClick={() => navigate("/ott-list")} className="subscribe-btn">
+                                OTT 서비스 둘러보기
+                            </Button>
+                        </Card.Body>
+                    </Card>
+                ) : (
+                    <Row className="g-4">
+                        {subscriptions.map((subscription) => (
+                            <Col key={subscription.id} md={6} lg={4}>
+                                <Card className="subscription-card h-100">
+                                    <Card.Body>
+                                        <h5 className="subscription-title mb-3">{subscription.ottName}</h5>
+                                        <div className="subscription-details">
+                                            <p>요금제: {subscription.planName}</p>
+                                            <p>가격: {subscription.price.toLocaleString()}원</p>
+                                            <p>구독 기간: {subscription.duration}개월</p>
+                                            <p>구독 시작: {new Date(subscription.startDate).toLocaleDateString()}</p>
+                                            <p>구독 만료: {new Date(subscription.endDate).toLocaleDateString()}</p>
+                                            <p className="status">상태: {subscription.active ? "구독중" : "만료됨"}</p>
+                                        </div>
+                                        {subscription.active && (
+                                            <div className="d-grid mt-3">
+                                                <Button
+                                                    variant="danger"
+                                                    onClick={() => {
+                                                        if (window.confirm("정말로 구독을 취소하시겠습니까?")) {
+                                                            handleCancelSubscription(subscription.id);
+                                                        }
+                                                    }}
+                                                >
+                                                    구독 취소
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
+                )}
+            </Container>
         </div>
     );
 };

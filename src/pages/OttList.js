@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
+import { FaStream, FaCrown, FaRegClock } from "react-icons/fa";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import "../styles/OttList.css";
 
 const OttList = () => {
     const [otts, setOtts] = useState([]);
     const [message, setMessage] = useState("");
     const [selectedOtt, setSelectedOtt] = useState(null);
     const [selectedPlan, setSelectedPlan] = useState(null);
-    const [subscriptionPeriod, setSubscriptionPeriod] = useState(1); // 기본 1개월
+    const [subscriptionPeriod, setSubscriptionPeriod] = useState(1);
     const [showSubscribeModal, setShowSubscribeModal] = useState(false);
-    const navigate = useNavigate();
 
     useEffect(() => {
         fetchOtts();
@@ -22,15 +23,16 @@ const OttList = () => {
             });
             setOtts(response.data);
         } catch (error) {
-            console.error("OTT 목록 가져오기 실패:", error);
             setMessage("OTT 목록을 가져오는데 실패했습니다.");
         }
     };
 
     const handleSubscribe = (ott) => {
         setSelectedOtt(ott);
+        setSelectedPlan(null);
         setShowSubscribeModal(true);
     };
+
     const handleConfirmSubscription = async () => {
         if (!selectedPlan) {
             setMessage("요금제를 선택해주세요.");
@@ -38,147 +40,162 @@ const OttList = () => {
         }
 
         try {
-            const subscriptionData = {
-                ottId: selectedOtt.id,
-                pricingPlanId: selectedPlan.id,
-                period: subscriptionPeriod,
-            };
-
-            const response = await axios.post("http://localhost:8080/api/subscriptions", subscriptionData, {
-                withCredentials: true,
-                headers: {
-                    "Content-Type": "application/json",
+            await axios.post(
+                "http://localhost:8080/api/subscriptions",
+                {
+                    ottId: selectedOtt.id,
+                    pricingPlanId: selectedPlan.id,
+                    period: subscriptionPeriod,
                 },
-            });
-
+                { withCredentials: true }
+            );
             setMessage("구독이 완료되었습니다!");
             setShowSubscribeModal(false);
+            setSelectedOtt(null);
             setSelectedPlan(null);
-            setSubscriptionPeriod(1);
         } catch (error) {
-            console.error("구독 신청 실패:", error);
-            if (error.response?.status === 401) {
-                setMessage("로그인이 필요한 서비스입니다.");
-                navigate("/login");
-            } else {
-                setMessage(error.response?.data?.message || "구독 신청에 실패했습니다.");
-            }
+            setMessage(error.response?.data?.message || "구독 신청에 실패했습니다.");
         }
     };
 
     return (
-        <div className="container mt-4">
-            <h2>OTT 서비스 목록</h2>
-
-            {message && (
-                <div className="alert alert-info" role="alert">
-                    {typeof message === "string" ? message : "오류가 발생했습니다."}
+        <div className="ott-list-container">
+            <Container className="py-5">
+                <div className="section-header text-center mb-5">
+                    <h2 className="section-title">OTT 서비스 목록</h2>
+                    <p className="section-subtitle">다양한 OTT 서비스를 구독하고 즐겨보세요</p>
                 </div>
-            )}
 
-            <div className="row">
-                {otts.map((ott) => (
-                    <div key={ott.id} className="col-md-4 mb-4">
-                        <div className="card">
-                            <div className="card-body">
-                                <h5 className="card-title">{ott.name}</h5>
-                                <p className="card-text">{ott.description}</p>
-                                <div className="mt-3">
-                                    <h6>요금제:</h6>
-                                    <ul className="list-unstyled">
-                                        {ott.pricingPlans.map((plan) => (
-                                            <li key={plan.id}>
-                                                {plan.planName}: {plan.price}원
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <button className="btn btn-primary" onClick={() => handleSubscribe(ott)}>
-                                    구독하기
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                {message && (
+                    <Alert
+                        variant={message.includes("실패") ? "danger" : "success"}
+                        onClose={() => setMessage("")}
+                        dismissible
+                        className="mb-4"
+                    >
+                        {message}
+                    </Alert>
+                )}
 
-            {/* 구독 모달 */}
-            {showSubscribeModal && (
-                <div className="modal" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}>
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">{selectedOtt.name} 구독</h5>
-                                <button type="button" className="close" onClick={() => setShowSubscribeModal(false)}>
-                                    <span>&times;</span>
-                                </button>
-                            </div>
-                            <div className="modal-body">
-                                {/* 요금제 선택 */}
-                                <div className="form-group mb-3">
-                                    <label>요금제 선택</label>
-                                    <div>
-                                        {selectedOtt.pricingPlans.map((plan) => (
-                                            <div key={plan.id} className="form-check">
-                                                <input
-                                                    type="radio"
-                                                    className="form-check-input"
-                                                    name="pricingPlan"
-                                                    id={`plan-${plan.id}`}
-                                                    checked={selectedPlan?.id === plan.id}
-                                                    onChange={() => setSelectedPlan(plan)}
-                                                />
-                                                <label className="form-check-label" htmlFor={`plan-${plan.id}`}>
-                                                    {plan.planName}: {plan.price.toLocaleString()}원
-                                                </label>
-                                            </div>
-                                        ))}
+                <Row className="g-4">
+                    {otts.map((ott) => (
+                        <Col key={ott.id} md={6} lg={4}>
+                            <Card className="ott-card h-100">
+                                <Card.Body>
+                                    <div className="ott-icon mb-3">
+                                        <FaStream />
                                     </div>
-                                </div>
+                                    <h3 className="ott-title mb-3">{ott.name}</h3>
+                                    <p className="ott-description">{ott.description}</p>
+                                    <div className="pricing-preview mb-3">
+                                        {ott.pricingPlans.length > 0 && (
+                                            <p className="mb-0">
+                                                <small>최저 </small>
+                                                <span className="price">
+                                                    {Math.min(
+                                                        ...ott.pricingPlans.map((plan) => plan.price)
+                                                    ).toLocaleString()}
+                                                    원
+                                                </span>
+                                                <small> 부터</small>
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="d-grid">
+                                        <Button className="subscribe-btn" onClick={() => handleSubscribe(ott)}>
+                                            구독하기
+                                        </Button>
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    ))}
+                </Row>
 
-                                {/* 구독 기간 선택 */}
-                                <div className="form-group">
-                                    <label>구독 기간 (월)</label>
-                                    <select
-                                        className="form-control"
-                                        value={subscriptionPeriod}
-                                        onChange={(e) => setSubscriptionPeriod(Number(e.target.value))}
-                                    >
-                                        <option value={1}>1개월</option>
-                                        <option value={3}>3개월</option>
-                                        <option value={6}>6개월</option>
-                                        <option value={12}>12개월</option>
-                                    </select>
+                <Modal
+                    show={showSubscribeModal}
+                    onHide={() => setShowSubscribeModal(false)}
+                    centered
+                    className="subscription-modal"
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>
+                            <FaCrown className="modal-icon me-2" />
+                            {selectedOtt?.name} 구독
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group className="mb-4">
+                                <Form.Label className="fw-bold">
+                                    <FaStream className="me-2" />
+                                    요금제 선택
+                                </Form.Label>
+                                <div className="plan-options">
+                                    {selectedOtt?.pricingPlans.map((plan) => (
+                                        <Card
+                                            key={plan.id}
+                                            className={`plan-card mb-2 ${
+                                                selectedPlan?.id === plan.id ? "selected" : ""
+                                            }`}
+                                            onClick={() => setSelectedPlan(plan)}
+                                        >
+                                            <Card.Body>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 className="mb-1">{plan.planName}</h6>
+                                                        <p className="mb-0 text-muted">
+                                                            {plan.price.toLocaleString()}원/월
+                                                        </p>
+                                                    </div>
+                                                    <Form.Check
+                                                        type="radio"
+                                                        checked={selectedPlan?.id === plan.id}
+                                                        onChange={() => {}}
+                                                    />
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    ))}
                                 </div>
+                            </Form.Group>
 
-                                {/* 총 결제 금액 표시 */}
-                                {selectedPlan && (
-                                    <p className="mt-3">
+                            <Form.Group className="mb-4">
+                                <Form.Label className="fw-bold">
+                                    <FaRegClock className="me-2" />
+                                    구독 기간
+                                </Form.Label>
+                                <Form.Select
+                                    value={subscriptionPeriod}
+                                    onChange={(e) => setSubscriptionPeriod(Number(e.target.value))}
+                                    className="period-select"
+                                >
+                                    <option value={1}>1개월</option>
+                                    <option value={3}>3개월</option>
+                                    <option value={6}>6개월</option>
+                                    <option value={12}>12개월</option>
+                                </Form.Select>
+                            </Form.Group>
+
+                            {selectedPlan && (
+                                <div className="total-price">
+                                    <h5 className="mb-0">
                                         총 결제 금액: {(selectedPlan.price * subscriptionPeriod).toLocaleString()}원
-                                    </p>
-                                )}
-                            </div>
-                            <div className="modal-footer">
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => setShowSubscribeModal(false)}
-                                >
-                                    취소
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    onClick={handleConfirmSubscription}
-                                    disabled={!selectedPlan}
-                                >
-                                    구독하기
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                                    </h5>
+                                </div>
+                            )}
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="outline-secondary" onClick={() => setShowSubscribeModal(false)}>
+                            취소
+                        </Button>
+                        <Button className="subscribe-btn" onClick={handleConfirmSubscription} disabled={!selectedPlan}>
+                            구독하기
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            </Container>
         </div>
     );
 };
