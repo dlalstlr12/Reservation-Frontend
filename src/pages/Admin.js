@@ -71,6 +71,45 @@ const AdminPage = () => {
             setMessage("가격제 추가에 실패했습니다.");
         }
     };
+    // OTT 삭제 핸들러
+    const handleDeleteOtt = async (ottId) => {
+        if (window.confirm("정말로 이 OTT 서비스를 삭제하시겠습니까?")) {
+            try {
+                await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}`, {
+                    withCredentials: true,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                setMessage("OTT 서비스가 성공적으로 삭제되었습니다.");
+                fetchOtts(); // OTT 목록 새로고침
+            } catch (error) {
+                console.error("OTT 삭제 실패:", error);
+                setMessage("OTT 삭제에 실패했습니다.");
+            }
+        }
+    };
+
+    // 요금제 삭제 핸들러
+    const handleDeletePlan = async (ottId, planId) => {
+        if (window.confirm("정말로 이 요금제를 삭제하시겠습니까?")) {
+            try {
+                await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}/pricing-plan/${planId}`, {
+                    withCredentials: true,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                setMessage("요금제가 성공적으로 삭제되었습니다.");
+                fetchOtts(); // OTT 목록 새로고침
+            } catch (error) {
+                console.error("요금제 삭제 실패:", error);
+                setMessage("요금제 삭제에 실패했습니다.");
+            }
+        }
+    };
 
     return (
         <Container className="py-5">
@@ -174,15 +213,36 @@ const AdminPage = () => {
                                 <Col md={6} lg={4} key={ott.id} className="mb-4">
                                     <Card>
                                         <Card.Body>
-                                            <Card.Title>{ott.name}</Card.Title>
+                                            <div className="d-flex justify-content-between align-items-start">
+                                                <Card.Title>{ott.name}</Card.Title>
+                                                <Button
+                                                    variant="danger"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteOtt(ott.id)}
+                                                >
+                                                    삭제
+                                                </Button>
+                                            </div>
                                             <Card.Text>{ott.description}</Card.Text>
                                             {ott.pricingPlans && ott.pricingPlans.length > 0 && (
                                                 <div>
                                                     <h6 className="mt-3">가격제:</h6>
                                                     <ul className="list-unstyled">
                                                         {ott.pricingPlans.map((plan) => (
-                                                            <li key={plan.id} className="mb-2">
-                                                                {plan.planName}: {plan.price.toLocaleString()}원
+                                                            <li
+                                                                key={plan.id}
+                                                                className="mb-2 d-flex justify-content-between align-items-center"
+                                                            >
+                                                                <span>
+                                                                    {plan.planName}: {plan.price.toLocaleString()}원
+                                                                </span>
+                                                                <Button
+                                                                    variant="outline-danger"
+                                                                    size="sm"
+                                                                    onClick={() => handleDeletePlan(ott.id, plan.id)}
+                                                                >
+                                                                    삭제
+                                                                </Button>
                                                             </li>
                                                         ))}
                                                     </ul>
