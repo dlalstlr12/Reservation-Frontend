@@ -70,7 +70,7 @@ const Admin = () => {
     const handleSubmitPlan = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(`http://localhost:8080/api/admin/ott/${selectedOtt.id}/pricing-plans`, planForm, {
+            await axios.post(`http://localhost:8080/api/admin/ott/${selectedOtt.id}/pricing-plan`, planForm, {
                 withCredentials: true,
             });
             setMessage("요금제가 추가되었습니다.");
@@ -95,7 +95,7 @@ const Admin = () => {
 
     const handleDeletePlan = async (ottId, planId) => {
         try {
-            await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}/pricing-plans/${planId}`, {
+            await axios.delete(`http://localhost:8080/api/admin/ott/${ottId}/pricing-plan/${planId}`, {
                 withCredentials: true,
             });
             setMessage("요금제가 삭제되었습니다.");
