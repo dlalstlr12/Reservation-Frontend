@@ -8,6 +8,7 @@ import "../styles/Auth.css";
 const Register = () => {
     const [formData, setFormData] = useState({ username: "", password: "" });
     const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -24,7 +25,7 @@ const Register = () => {
                 navigate("/login");
             }, 2000);
         } catch (error) {
-            setMessage("Error: " + (error.response?.data?.message || error.message));
+            setError("Error: " + (error.response?.data?.message || error.message));
         }
     };
 
@@ -50,7 +51,11 @@ const Register = () => {
                                         {message}
                                     </Alert>
                                 )}
-
+                                {error && (
+                                    <Alert variant="danger" className="mb-4" onClose={() => setError("")} dismissible>
+                                        {error}
+                                    </Alert>
+                                )}
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group className="mb-4">
                                         <Form.Label>
